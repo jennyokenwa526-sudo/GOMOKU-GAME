@@ -1,76 +1,112 @@
 package com.jenny.gomoku.game;
 
+import com.jenny.gomoku.ai.AI;
+import com.jenny.gomoku.db.DatabaseManager;
 import com.jenny.gomoku.model.Board;
-import com.jenny.gomoku.ai.RandomAI;
 import com.jenny.gomoku.util.GameLogger;
 
+import java.util.Scanner;
 /**
- * Controls the main gameplay loop for Gomoku.
- * Exposes small API used in tests (makeMove, aiMove, getBoard).
+ * Main game controller: contains the game loop, processes player and AI moves,
+ * logs events and stores moves to the database.
  */
 public class GomokuGame {
 
-    private final Board board;
-    private final RandomAI ai;
-
-    public GomokuGame(Board board) {
-        this.board = board;
-        this.ai = new RandomAI();
-    }
-
-    /** convenience constructor to create a fresh board */
-    public GomokuGame(int rows, int cols) {
-        this(new Board(rows, cols));
-    }
-
-    /** return the underlying board (for tests) */
-    public Board getBoard() {
-        return board;
-    }
+    private Board board;
+    private final AI ai;
+    private final Scanner scanner;
+    private final DatabaseManager db = DatabaseManager.getInstance();
 
     /**
-     * Places a move for the given player symbol.
-     * @param player char 'X' or 'O'
-     * @return true if placed, false otherwise
+     * Create a game controller with a board and an AI player.
+     * @param board the board instance
+     * @param ai AI strategy implementation
+     */
+    public GomokuGame(Board board, AI ai) {
+        this.board = board;
+        this.ai = ai;
+        this.scanner = new Scanner(System.in);
+    }
+    /**
+     * Try to place a move for the given player.
+     * @param player 'X' for human, 'O' for computer
+     * @param row zero-based row index
+     * @param col zero-based column index
+     * @return true if the move was placed
      */
     public boolean makeMove(char player, int row, int col) {
         boolean ok = board.placeMove(row, col, player);
-        if (ok) GameLogger.logMove(player == 'X' ? "Human" : "Computer", row, col);
+
+        if (ok) {
+            GameLogger.logMove(player == 'X' ? "Human" : "Computer", row, col);
+            db.saveMove(player == 'X' ? "Human" : "Computer", row, col, String.valueOf(player));
+        }
         return ok;
     }
-
-    /** Ask the AI to pick and apply a move. Returns true if AI placed a move. */
+    /**
+     * Ask AI to pick and make a move.
+     * @return true if AI move succeeded
+     */
     public boolean aiMove() {
         int[] mv = ai.getMove(board);
-        if (mv == null || mv.length != 2) return false;
-        if (mv[0] < 0 || mv[1] < 0) return false;
-        boolean ok = board.placeMove(mv[0], mv[1], 'O');
-        if (ok) GameLogger.logMove("Computer", mv[0], mv[1]);
-        return ok;
+        return makeMove('O', mv[0], mv[1]);
     }
-
-    /** The interactive console loop (unused by tests, used by Main) */
+    /**
+     * Start the command-line interactive loop. Recognized commands:
+     *  - "<row> <col>" place move,
+     *  - "save" save board to DB,
+     *  - "load <id>" load board from DB,
+     *  - "list" list saved boards,
+     *  - "exit" quit.
+     */
     public void startInteractive() {
-        java.util.Scanner scanner = new java.util.Scanner(System.in);
         System.out.println("Welcome to Gomoku!");
         board.printBoard();
+
         while (true) {
-            System.out.print("Your move (row col): ");
-            int r = scanner.nextInt();
-            int c = scanner.nextInt();
-            if (!makeMove('X', r, c)) {
-                System.out.println("Invalid move. Try again.");
+            System.out.print("Enter 'row col': ");
+
+            int r, c;
+            try {
+                r = scanner.nextInt();
+                c = scanner.nextInt();
+            } catch (Exception e) {
+                scanner.nextLine();
                 continue;
             }
-            board.printBoard();
-            if (board.checkWin('X')) { System.out.println("You win!"); GameLogger.logWinner("Human"); break; }
-            if (board.isFull()) { System.out.println("Draw"); GameLogger.logDraw(); break; }
 
-            System.out.println("Computer is thinking...");
+            if (!makeMove('X', r, c)) {
+                System.out.println("Invalid move.");
+                continue;
+            }
+
+            board.printBoard();
+            if (board.checkWin('X')) {
+                System.out.println("You win!");
+                db.saveResult("Human Wins");
+                break;
+            }
+
+            if (board.isFull()) {
+                System.out.println("Draw!");
+                db.saveResult("Draw");
+                break;
+            }
+
             aiMove();
             board.printBoard();
-            if (board.checkWin('O')) { System.out.println("Computer wins"); GameLogger.logWinner("Computer"); break; }
-            if (board.isFull()) { System.out.println("Draw"); GameLogger.logDraw(); break; }
+
+            if (board.checkWin('O')) {
+                System.out.println("Computer wins!");
+                db.saveResult("Computer Wins");
+                break;
+            }
+
+            if (board.isFull()) {
+                System.out.println("Draw!");
+                db.saveResult("Draw");
+                break;
+            }
         }
     }
 }

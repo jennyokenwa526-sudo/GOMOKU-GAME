@@ -2,29 +2,23 @@ package com.jenny.gomoku.ai;
 
 import com.jenny.gomoku.model.Board;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-
 /**
- * Simple AI that chooses a random valid move.
+ * Random AI implementation that picks any empty cell at random.
  */
-public class RandomAI {
+public class RandomAI implements AI {
 
-    private final Random random = new Random();
+    private final Random rand = new Random();
 
-    /**
-     * Returns a random available move as [row, col].
-     * If no moves available returns [-1, -1].
-     */
+    @Override
     public int[] getMove(Board board) {
-        List<int[]> available = new ArrayList<>();
-        for (int r = 0; r < board.getRows(); r++) {
-            for (int c = 0; c < board.getCols(); c++) {
-                if (board.isCellEmpty(r, c)) available.add(new int[]{r, c});
-            }
+        // pick a random empty cell
+        while (true) {
+            int r = rand.nextInt(10);
+            int c = rand.nextInt(10);
+
+            if (board.isValidMove(r, c))
+                return new int[]{r, c};
         }
-        if (available.isEmpty()) return new int[]{-1, -1};
-        return available.get(random.nextInt(available.size()));
     }
 }

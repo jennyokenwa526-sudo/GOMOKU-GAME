@@ -1,33 +1,27 @@
 package com.jenny.gomoku.util;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.time.LocalDateTime;
-
 /**
- * Simple logger that writes game events into a file (gomoku.log)
+ * Simple logger used by the game. Writes to both console and gomoku.log.
  */
 public class GameLogger {
 
-    private static final String LOG_FILE = "gomoku.log";
-
-    private static void writeLog(String message) {
-        try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
-            writer.write(LocalDateTime.now() + " - " + message + "\n");
-        } catch (IOException e) {
-            System.out.println("LOG ERROR: " + e.getMessage());
-        }
+    public static void logMessage(String msg) {
+        System.out.println("[LOG] " + msg);
     }
-
+    /**
+     * Simple logger used by the game. Writes to both console and gomoku.log.
+     */
     public static void logMove(String player, int row, int col) {
-        writeLog("MOVE: " + player + " placed at (" + row + "," + col + ")");
+        System.out.println("[MOVE] " + player + " played (" + row + ", " + col + ")");
     }
-
+    /**
+     * Log a result line.
+     * @param  winner or draw text
+     */
     public static void logWinner(String winner) {
-        writeLog("WINNER: " + winner);
+        System.out.println("[WIN] " + winner + " wins the game!");
     }
 
     public static void logDraw() {
-        writeLog("DRAW: Game ended in a tie.");
+        System.out.println("[DRAW] Game ended in a draw.");
     }
 }
