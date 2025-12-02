@@ -1,116 +1,154 @@
 package com.jenny.gomoku.model;
-
-import java.util.Arrays;
-
 /**
- * Represents the Gomoku board and provides move and win-checking logic.
- * Empty cells are represented with '.' character.
+ * Represents the Gomoku board and provides methods to inspect and modify it.
+ * Uses '.' for empty cells and 'X'/'O' for players.
  */
 public class Board {
+
     private final int rows;
     private final int cols;
     private final char[][] grid;
 
+    /**
+     * Create a board with given number of rows and columns.
+     * @param rows number of rows (must be > 0)
+     * @param cols number of columns (must be > 0)
+     */
     public Board(int rows, int cols) {
-        if (rows <= 0 || cols <= 0) throw new IllegalArgumentException("rows/cols must be > 0");
         this.rows = rows;
         this.cols = cols;
         this.grid = new char[rows][cols];
-        clearBoard();
+
+        // Fill grid with dots
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                grid[r][c] = '.';
+            }
+        }
     }
 
-    /** Set all cells to empty '.' */
-    public void clearBoard() {
-        for (char[] row : grid) Arrays.fill(row, '.');
-    }
-
+    // ===== REQUIRED BY TESTS AND GAME =====
     /**
-     * Place a move on the board.
-     * @param row zero-based row
-     * @param col zero-based column
-     * @param player 'X' or 'O'
-     * @return true if placed successfully, false if invalid or occupied
+     * Return number of rows.
+     * @return rows
      */
-    public boolean placeMove(int row, int col, char player) {
-        if (!isWithin(row, col)) return false;
-        if (grid[row][col] != '.') return false;
-        grid[row][col] = player;
-        return true;
+    public int getRows() {
+        return rows;
     }
-
-    /** Returns true if given cell is inside the board */
-    public boolean isWithin(int row, int col) {
-        return row >= 0 && row < rows && col >= 0 && col < cols;
+    /**
+     * Return number of columns.
+     * @return cols
+     */
+    public int getCols() {
+        return cols;
     }
-
-    /** Returns true if the cell is empty ('.') */
-    public boolean isCellEmpty(int row, int col) {
-        if (!isWithin(row, col)) return false;
-        return grid[row][col] == '.';
-    }
-
+/**
+ * Returns the character at the given cell.
+ * @param row zero-based row index
+ * @param col zero-based column index
+ * @return cell character ('.','X' or 'O'); '\0' if out-of-range
+ */
+    /** REQUIRED by GomokuGameTest */
     public char getCell(int row, int col) {
-        if (!isWithin(row, col)) throw new IndexOutOfBoundsException("Invalid cell");
+        if (row < 0 || row >= rows || col < 0 || col >= cols) {
+            return '\0';
+        }
         return grid[row][col];
     }
+/**
+ * Checks whether the given cell is a valid empty move.
+ * @param row zero-based row
+ * @param col zero-based col
+ * @return true if the cell is in bounds and empty
+ */
+    /** REQUIRED by RandomAI.java */
+    public boolean isValidMove(int row, int col) {
+        return row >= 0 && row < rows &&
+                col >= 0 && col < cols &&
+                grid[row][col] == '.';
+    }
 
-    public int getRows() { return rows; }
-    public int getCols() { return cols; }
-
-    /** Returns true if no empty cells remain */
-    public boolean isFull() {
-        for (char[] r : grid) for (char c : r) if (c == '.') return false;
+    /** REQUIRED by RandomAITest */
+    public boolean isCellEmpty(int row, int col) {
+        return isValidMove(row, col);
+    }
+/**
+ * Place a move on the board.
+ * @param row zero-based row
+ * @param col zero-based col
+ * @param symbol 'X' or 'O'
+ * @return true if placed successfully
+ */
+    /** REQUIRED by GomokuGame */
+    public boolean placeMove(int row, int col, char symbol) {
+        if (!isValidMove(row, col)) return false;
+        grid[row][col] = symbol;
         return true;
     }
-
-    /** Check if the given player has 5 in a row */
-    public boolean checkWin(char player) {
-        final int need = 5;
-        // horizontal
+    /**
+     * Returns true when no empty cells remain.
+     * @return true if board is full
+     */
+    public boolean isFull() {
         for (int r = 0; r < rows; r++) {
-            int cnt = 0;
             for (int c = 0; c < cols; c++) {
-                cnt = (grid[r][c] == player) ? cnt + 1 : 0;
-                if (cnt >= need) return true;
+                if (grid[r][c] == '.') return false;
             }
         }
-        // vertical
-        for (int c = 0; c < cols; c++) {
-            int cnt = 0;
-            for (int r = 0; r < rows; r++) {
-                cnt = (grid[r][c] == player) ? cnt + 1 : 0;
-                if (cnt >= need) return true;
+        return true;
+    }
+/**
+ * Check whether the given player has 5 in a row.
+ * @param symbol player symbol (X or O)
+ * @return true if the player won
+ */
+    /** 5-in-a-row win check */
+    public boolean checkWin(char symbol) {
+        // Horizontal
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c <= cols - 5; c++) {
+                if (grid[r][c] == symbol && grid[r][c+1] == symbol &&
+                        grid[r][c+2] == symbol && grid[r][c+3] == symbol &&
+                        grid[r][c+4] == symbol) return true;
             }
         }
-        // diagonal down-right
-        for (int r = 0; r <= rows - need; r++) {
-            for (int c = 0; c <= cols - need; c++) {
-                boolean ok = true;
-                for (int i = 0; i < need; i++) {
-                    if (grid[r + i][c + i] != player) { ok = false; break; }
-                }
-                if (ok) return true;
+
+        // Vertical
+        for (int r = 0; r <= rows - 5; r++) {
+            for (int c = 0; c < cols; c++) {
+                if (grid[r][c] == symbol && grid[r+1][c] == symbol &&
+                        grid[r+2][c] == symbol && grid[r+3][c] == symbol &&
+                        grid[r+4][c] == symbol) return true;
             }
         }
-        // diagonal up-right
-        for (int r = need - 1; r < rows; r++) {
-            for (int c = 0; c <= cols - need; c++) {
-                boolean ok = true;
-                for (int i = 0; i < need; i++) {
-                    if (grid[r - i][c + i] != player) { ok = false; break; }
-                }
-                if (ok) return true;
+
+        // Diagonal ↘
+        for (int r = 0; r <= rows - 5; r++) {
+            for (int c = 0; c <= cols - 5; c++) {
+                if (grid[r][c] == symbol && grid[r+1][c+1] == symbol &&
+                        grid[r+2][c+2] == symbol && grid[r+3][c+3] == symbol &&
+                        grid[r+4][c+4] == symbol) return true;
             }
         }
+
+        // Diagonal ↗
+        for (int r = 4; r < rows; r++) {
+            for (int c = 0; c <= cols - 5; c++) {
+                if (grid[r][c] == symbol && grid[r-1][c+1] == symbol &&
+                        grid[r-2][c+2] == symbol && grid[r-3][c+3] == symbol &&
+                        grid[r-4][c+4] == symbol) return true;
+            }
+        }
+
         return false;
     }
-
-    /** Prints board to console */
+    /**
+     * Prints the board to System.out
+     */
     public void printBoard() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                System.out.print(grid[r][c]);
-                if (c < cols - 1) System.out.print(' ');
+                System.out.print(grid[r][c] + " ");
             }
             System.out.println();
         }

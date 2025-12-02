@@ -1,0 +1,184 @@
+Gomoku – Java Console Game (with AI, SQLite Persistence, Logging, Tests & JavaDoc)
+1. Overview
+
+This project is a complete implementation of the game Gomoku (Five in a Row) written in Java.
+The game runs in the console, includes a computer player (AI), persists every move using SQLite, and includes JUnit tests, JavaDoc, and proper design patterns as required by the assignment.
+
+The human player uses X, and the computer player uses O.
+
+2. Features
+✔ Interactive console gameplay
+
+Human plays by entering row/column
+
+AI makes automatic moves
+
+Game ends on win or draw
+
+✔ AI opponent (Strategy Pattern)
+
+AI is implemented via an AI interface
+
+RandomAI is the default implementation
+
+New AI types can be added without changing GomokuGame
+
+✔ SQLite database persistence
+
+Move history and game results are saved automatically into gomoku.db:
+
+Player (Human or Computer)
+
+Row and column
+
+Symbol (X or O)
+
+End-game result (Human Wins, Computer Wins, Draw)
+
+✔ Singleton database controller
+
+DatabaseManager uses the Singleton pattern to ensure only one DB handler exists.
+
+✔ Logging
+
+All moves are logged using GameLogger.
+
+✔ JUnit tests
+
+Covers:
+
+Board logic
+
+Win checking
+
+Move placement
+
+DatabaseManager (with test subclass)
+
+AI move validity
+
+✔ JavaDoc
+
+Full JavaDoc is generated into:
+target/site/apidocs/index.html
+
+3. Project Structure
+gomoku/
+ ├── src/
+ │   ├── main/java/com/jenny/gomoku/
+ │   │   ├── game/        → GomokuGame, Main
+ │   │   ├── model/       → Board
+ │   │   ├── ai/          → AI, RandomAI
+ │   │   ├── db/          → DatabaseManager (Singleton)
+ │   │   └── util/        → GameLogger
+ │   └── test/java/...    → JUnit tests
+ ├── target/
+ │   └── site/apidocs/    → Generated JavaDoc
+ ├── pom.xml
+ ├── gomoku.db            → SQLite database file (created automatically)
+ ├── gomoku.log           → Log file (if enabled)
+ └── README.md
+
+4. How to Run the Game
+Using IntelliJ (recommended)
+
+Open the project in IntelliJ
+
+Run:
+src/main/java/com/jenny/gomoku/game/Main.java
+
+Play by typing moves like:
+
+2 3
+5 7
+0 0
+
+5. How to Run JavaDoc (IntelliJ Maven)
+
+In IntelliJ:
+
+Open the Maven panel
+
+Navigate to:
+Plugins → javadoc → javadoc
+
+After it builds successfully, open:
+
+target/site/apidocs/index.html
+
+6. How to Run Tests
+
+In IntelliJ:
+
+Maven → Lifecycle → test
+
+or right-click the test folder → Run Tests
+
+7. Design Patterns Used
+Strategy Pattern
+
+Used for AI implementation:
+
+AI interface
+
+RandomAI implements the strategy
+
+Allows plugging in smarter AIs later without changing game logic.
+
+Singleton Pattern
+
+Used for database persistence:
+
+DatabaseManager
+
+Single instance accessed via getInstance()
+
+Guarantees only one DB connection handler exists.
+
+8. Database Schema
+
+SQLite file: gomoku.db
+
+Table created automatically:
+
+games (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  player  TEXT,
+  row     INTEGER,
+  col     INTEGER,
+  symbol  TEXT
+)
+
+
+Each move is stored via:
+
+saveMove(player, row, col, symbol)
+
+
+Game results stored via:
+
+saveResult("Human Wins")
+
+9. How to Clean the Database (Optional)
+
+In code/tests:
+
+DatabaseManager.getInstance().clearDatabase();
+
+10. Requirements That This Project Fulfills
+Requirement	Completed
+Console-based Gomoku game
+Board model
+AI opponent
+DB persistence
+Logging
+JavaDoc
+JUnit tests
+Design patterns
+Clean project structure
+11. Author
+
+Okenwa Jenny Chioma
+M089BI
+Gomoku Java Assignment 2025
+

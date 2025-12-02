@@ -1,11 +1,13 @@
 package com.jenny.gomoku;
 
+import com.jenny.gomoku.db.DatabaseManager;
 import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.sql.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 
 class DatabaseManagerTest {
 
